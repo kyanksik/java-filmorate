@@ -1,12 +1,10 @@
 package ru.yandex.practicum.filmorate.controller;
-
 import io.micrometer.common.util.StringUtils;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,6 +12,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/users")
 @Slf4j
+
 public class UserController {
 
     private final Map<Long, User> users = new HashMap<>();
