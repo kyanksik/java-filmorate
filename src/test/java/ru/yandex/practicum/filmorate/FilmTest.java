@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import java.time.LocalDate;
@@ -12,6 +11,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -98,6 +98,6 @@ public class FilmTest {
     }
 
     private void validate(Film film) {
-        FilmController.validate(film);
+        InMemoryFilmStorage.validate(film);
     }
 }
