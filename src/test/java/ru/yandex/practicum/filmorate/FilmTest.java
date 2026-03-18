@@ -12,6 +12,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -98,6 +99,6 @@ public class FilmTest {
     }
 
     private void validate(Film film) {
-        FilmController.validate(film);
+        InMemoryFilmStorage.validate(film);
     }
 }
