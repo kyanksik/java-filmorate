@@ -3,7 +3,8 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.dto.MpaDto;
+import ru.yandex.practicum.filmorate.mapper.MpaMapper;
 import ru.yandex.practicum.filmorate.service.MpaService;
 
 import java.util.Collection;
@@ -16,12 +17,14 @@ public class MpaController {
     private final MpaService mpaService;
 
     @GetMapping
-    public Collection<Mpa> findAll() {
-        return mpaService.findAll();
+    public Collection<MpaDto> findAll() {
+        return mpaService.findAll().stream()
+                .map(MpaMapper::toDto)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public Mpa findById(@PathVariable int id) {
-        return mpaService.findById(id);
+    public MpaDto findById(@PathVariable int id) {
+        return MpaMapper.toDto(mpaService.findById(id));
     }
 }
