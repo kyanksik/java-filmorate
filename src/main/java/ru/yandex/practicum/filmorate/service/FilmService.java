@@ -18,5 +18,7 @@ public interface FilmService {
 
     Collection<Film> getPopular(int count);
 
+    Collection<Film> getFilmsByDirector(long directorId, String sortBy);
+
     Film findById(Long id);
 }

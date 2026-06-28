@@ -7,14 +7,17 @@ import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.db.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.MpaDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.UserDbStorage;
+import ru.yandex.practicum.filmorate.storage.mapper.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.storage.mapper.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.mapper.GenreRowMapper;
 import ru.yandex.practicum.filmorate.storage.mapper.MpaRowMapper;
@@ -29,7 +32,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JdbcTest
 @AutoConfigureTestDatabase
 @Import({UserDbStorage.class, FilmDbStorage.class, GenreDbStorage.class, MpaDbStorage.class,
-        UserRowMapper.class, FilmRowMapper.class, GenreRowMapper.class, MpaRowMapper.class})
+        DirectorDbStorage.class,
+        UserRowMapper.class, FilmRowMapper.class, GenreRowMapper.class, MpaRowMapper.class,
+        DirectorRowMapper.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class FilmorateDbStorageTests {
 
@@ -37,6 +42,7 @@ class FilmorateDbStorageTests {
     private final FilmDbStorage filmStorage;
     private final GenreDbStorage genreStorage;
     private final MpaDbStorage mpaStorage;
+    private final DirectorDbStorage directorStorage;
     private final JdbcTemplate jdbc;
 
     private Boolean confirmed(long userId, long friendId) {
@@ -258,5 +264,54 @@ class FilmorateDbStorageTests {
         filmStorage.deleteLike(film.getId(), liker.getId());
         // после удаления лайка фильм всё ещё существует
         assertThat(filmStorage.existsById(film.getId())).isTrue();
+    }
+
+    // ---------- directors ----------
+
+    @Test
+    void testCreateUpdateFindDeleteDirector() {
+        Director created = directorStorage.create(new Director(null, "Nolan"));
+        assertThat(created.getId()).isNotNull();
+        assertThat(directorStorage.findById(created.getId()))
+                .hasValueSatisfying(d -> assertThat(d.getName()).isEqualTo("Nolan"));
+
+        created.setName("Christopher Nolan");
+        directorStorage.update(created);
+        assertThat(directorStorage.findById(created.getId()))
+                .hasValueSatisfying(d -> assertThat(d.getName()).isEqualTo("Christopher Nolan"));
+
+        assertThat(directorStorage.existsById(created.getId())).isTrue();
+        directorStorage.delete(created.getId());
+        assertThat(directorStorage.existsById(created.getId())).isFalse();
+    }
+
+    @Test
+    void testFilmKeepsDirectorAndGetByDirectorSorted() {
+        Director director = directorStorage.create(new Director(null, "Tarantino"));
+
+        Film older = newFilm("Older");
+        older.setReleaseDate(LocalDate.of(2000, 1, 1));
+        older.setDirectors(new LinkedHashSet<>(List.of(new Director(director.getId(), null))));
+        older = filmStorage.create(older);
+
+        Film newer = newFilm("Newer");
+        newer.setReleaseDate(LocalDate.of(2010, 1, 1));
+        newer.setDirectors(new LinkedHashSet<>(List.of(new Director(director.getId(), null))));
+        newer = filmStorage.create(newer);
+
+        // фильм хранит режиссёра с именем
+        assertThat(filmStorage.findById(older.getId()).getDirectors())
+                .extracting(Director::getName)
+                .containsExactly("Tarantino");
+
+        // сортировка по году — по возрастанию
+        List<Film> byYear = List.copyOf(filmStorage.getByDirector(director.getId(), "year"));
+        assertThat(byYear).extracting(Film::getId).containsExactly(older.getId(), newer.getId());
+
+        // сортировка по лайкам — по убыванию
+        User liker = userStorage.create(newUser("dlike@mail.ru", "dlike"));
+        filmStorage.addLike(newer.getId(), liker.getId());
+        List<Film> byLikes = List.copyOf(filmStorage.getByDirector(director.getId(), "likes"));
+        assertThat(byLikes.get(0).getId()).isEqualTo(newer.getId());
     }
 }
