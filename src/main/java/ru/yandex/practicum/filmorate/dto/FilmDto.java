@@ -1,19 +1,15 @@
-package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.util.LinkedHashSet;
-import java.util.HashSet;
 import java.util.Set;
 
-
-
 @Data
-@Slf4j
-public class Film {
+public class FilmDto {
+
     private Long id;
 
     @NotBlank(message = "Название не может быть пустым")
@@ -28,9 +24,7 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть положительной")
     private Integer duration;
 
-    private Mpa mpa; // возрастной рейтинг фильма
+    private MpaDto mpa;
 
-    private Set<Genre> genres = new LinkedHashSet<>(); // жанры фильма
-
-    private Set<Long> likes = new HashSet<>(); // список лайков (id user)
+    private Set<GenreDto> genres = new LinkedHashSet<>();
 }

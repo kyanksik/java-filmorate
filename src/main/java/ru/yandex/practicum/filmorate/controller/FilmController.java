@@ -4,7 +4,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 
@@ -18,23 +19,25 @@ public class FilmController {
     private final FilmService filmService;
 
     @GetMapping
-    public Collection<Film> findAll() {
-        return filmService.findAll();
+    public Collection<FilmDto> findAll() {
+        return filmService.findAll().stream()
+                .map(FilmMapper::toDto)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public Film findById(@PathVariable Long id) {
-        return filmService.findById(id);
+    public FilmDto findById(@PathVariable Long id) {
+        return FilmMapper.toDto(filmService.findById(id));
     }
 
     @PostMapping
-    public Film create(@Valid @RequestBody Film film) {
-        return filmService.create(film);
+    public FilmDto create(@Valid @RequestBody FilmDto film) {
+        return FilmMapper.toDto(filmService.create(FilmMapper.toModel(film)));
     }
 
     @PutMapping
-    public Film update(@Valid @RequestBody Film newFilm) {
-        return filmService.update(newFilm);
+    public FilmDto update(@Valid @RequestBody FilmDto newFilm) {
+        return FilmMapper.toDto(filmService.update(FilmMapper.toModel(newFilm)));
     }
 
     @PutMapping("/{id}/like/{userId}")
@@ -48,8 +51,10 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public Collection<Film> getPopular(@RequestParam(defaultValue = "10") int count) {
-        return filmService.getPopular(count);
+    public Collection<FilmDto> getPopular(@RequestParam(defaultValue = "10") int count) {
+        return filmService.getPopular(count).stream()
+                .map(FilmMapper::toDto)
+                .toList();
     }
 
 }
