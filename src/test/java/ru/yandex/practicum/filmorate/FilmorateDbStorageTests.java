@@ -471,4 +471,20 @@ class FilmorateDbStorageTests {
         User noLikes = userStorage.create(newUser("nl@mail.ru", "nl"));
         assertThat(filmStorage.getRecommendations(noLikes.getId())).isEmpty();
     }
+
+    // ---------- delete user / film ----------
+
+    @Test
+    void testDeleteUserAndFilm() {
+        User user = userStorage.create(newUser("del@mail.ru", "del"));
+        Film film = filmStorage.create(newFilm("ToDelete"));
+        // лайк создаёт связь, которая должна каскадно удалиться
+        filmStorage.addLike(film.getId(), user.getId());
+
+        userStorage.delete(user.getId());
+        assertThat(userStorage.existById(user.getId())).isFalse();
+
+        filmStorage.delete(film.getId());
+        assertThat(filmStorage.existsById(film.getId())).isFalse();
+    }
 }

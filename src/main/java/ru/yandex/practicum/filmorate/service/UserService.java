@@ -23,5 +23,7 @@ public interface UserService {
 
     User findById(Long id);
 
+    void delete(long id);
+
     Collection<Event> getFeed(long userId);
 }

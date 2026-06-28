@@ -27,4 +27,6 @@ public interface FilmService {
     Collection<Film> getRecommendations(long userId);
 
     Film findById(Long id);
+
+    void delete(long id);
 }

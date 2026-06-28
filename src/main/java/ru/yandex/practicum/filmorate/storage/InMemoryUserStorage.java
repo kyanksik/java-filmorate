@@ -87,6 +87,11 @@ public class InMemoryUserStorage implements UserStorage {
                 .collect(java.util.stream.Collectors.toList());
     }
 
+    @Override
+    public void delete(long id) {
+        users.remove(id);
+    }
+
     private void validate(User user) {
         if (StringUtils.isBlank(user.getName())) {
             user.setName(user.getLogin());
