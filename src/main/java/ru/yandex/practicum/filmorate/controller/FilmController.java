@@ -57,4 +57,12 @@ public class FilmController {
                 .toList();
     }
 
+    @GetMapping("/director/{directorId}")
+    public Collection<FilmDto> getByDirector(@PathVariable long directorId,
+                                             @RequestParam(defaultValue = "likes") String sortBy) {
+        return filmService.getFilmsByDirector(directorId, sortBy).stream()
+                .map(FilmMapper::toDto)
+                .toList();
+    }
+
 }

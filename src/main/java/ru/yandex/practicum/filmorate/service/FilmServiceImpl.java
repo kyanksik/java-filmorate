@@ -5,8 +5,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.MpaStorage;
@@ -28,6 +30,7 @@ public class FilmServiceImpl implements FilmService {
     private final UserStorage userStorage;
     private final MpaStorage mpaStorage;
     private final GenreStorage genreStorage;
+    private final DirectorStorage directorStorage;
 
     @Override
     public Collection<Film> findAll() {
@@ -70,6 +73,14 @@ public class FilmServiceImpl implements FilmService {
     }
 
     @Override
+    public Collection<Film> getFilmsByDirector(long directorId, String sortBy) {
+        if (!directorStorage.existsById(directorId)) {
+            throw new NotFoundException("Режиссёр с id " + directorId + " не найден");
+        }
+        return filmsStorage.getByDirector(directorId, sortBy);
+    }
+
+    @Override
     public Film findById(Long id) {
         return filmsStorage.findById(id);
     }
@@ -85,6 +96,13 @@ public class FilmServiceImpl implements FilmService {
             for (Genre genre : film.getGenres()) {
                 if (!genreStorage.existsById(genre.getId())) {
                     throw new NotFoundException("Жанр с id " + genre.getId() + " не найден");
+                }
+            }
+        }
+        if (film.getDirectors() != null) {
+            for (Director director : film.getDirectors()) {
+                if (!directorStorage.existsById(director.getId())) {
+                    throw new NotFoundException("Режиссёр с id " + director.getId() + " не найден");
                 }
             }
         }

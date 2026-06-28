@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -64,6 +65,17 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public boolean existsById(Long id) {
         return films.containsKey(id);
+    }
+
+    @Override
+    public Collection<Film> getByDirector(long directorId, String sortBy) {
+        Comparator<Film> comparator = "likes".equalsIgnoreCase(sortBy)
+                ? Comparator.comparingInt((Film f) -> f.getLikes().size()).reversed()
+                : Comparator.comparing(Film::getReleaseDate);
+        return findAll().stream()
+                .filter(f -> f.getDirectors().stream().anyMatch(d -> d.getId() == directorId))
+                .sorted(comparator)
+                .collect(Collectors.toList());
     }
 
     @Override

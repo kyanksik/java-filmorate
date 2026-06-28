@@ -32,5 +32,7 @@ public class Film {
 
     private Set<Genre> genres = new LinkedHashSet<>(); // жанры фильма
 
+    private Set<Director> directors = new LinkedHashSet<>(); // режиссёры фильма
+
     private Set<Long> likes = new HashSet<>(); // список лайков (id user)
 }
