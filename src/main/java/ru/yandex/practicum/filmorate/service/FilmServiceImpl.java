@@ -6,8 +6,10 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Director;
+import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
@@ -31,6 +33,7 @@ public class FilmServiceImpl implements FilmService {
     private final MpaStorage mpaStorage;
     private final GenreStorage genreStorage;
     private final DirectorStorage directorStorage;
+    private final EventService eventService;
 
     @Override
     public Collection<Film> findAll() {
@@ -56,6 +59,7 @@ public class FilmServiceImpl implements FilmService {
             throw new NotFoundException("Пользователь с id " + userId + " не найден");
         }
         filmsStorage.addLike(filmId, userId);
+        eventService.addEvent(userId, EventType.LIKE, Operation.ADD, filmId);
     }
 
     @Override
@@ -65,6 +69,7 @@ public class FilmServiceImpl implements FilmService {
             throw new NotFoundException("Пользователь с id " + userId + " не найден");
         }
         filmsStorage.deleteLike(filmId, userId);
+        eventService.addEvent(userId, EventType.LIKE, Operation.REMOVE, filmId);
     }
 
     @Override

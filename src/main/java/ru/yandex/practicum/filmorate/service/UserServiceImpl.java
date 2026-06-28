@@ -3,6 +3,9 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -14,6 +17,7 @@ public class UserServiceImpl implements UserService {
 
     @Qualifier("userDbStorage")
     private final UserStorage userStorage;
+    private final EventService eventService;
 
     @Override
     public Collection<User> findAll() {
@@ -33,11 +37,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public void addFriend(Long userId, Long friendId) {
         userStorage.addFriend(userId, friendId);
+        eventService.addEvent(userId, EventType.FRIEND, Operation.ADD, friendId);
     }
 
     @Override
     public void deleteFriend(Long userId, Long friendId) {
         userStorage.deleteFriend(userId, friendId);
+        eventService.addEvent(userId, EventType.FRIEND, Operation.REMOVE, friendId);
     }
 
     @Override
@@ -53,5 +59,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findById(Long id) {
         return userStorage.findById(id);
+    }
+
+    @Override
+    public Collection<Event> getFeed(long userId) {
+        userStorage.findById(userId);
+        return eventService.getFeed(userId);
     }
 }

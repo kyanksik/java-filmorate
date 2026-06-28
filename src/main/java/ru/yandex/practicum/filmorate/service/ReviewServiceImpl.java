@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.ReviewStorage;
@@ -20,24 +22,30 @@ public class ReviewServiceImpl implements ReviewService {
     private final UserStorage userStorage;
     @Qualifier("filmDbStorage")
     private final FilmStorage filmStorage;
+    private final EventService eventService;
 
     @Override
     public Review create(Review review) {
         checkUser(review.getUserId());
         checkFilm(review.getFilmId());
-        return reviewStorage.create(review);
+        Review created = reviewStorage.create(review);
+        eventService.addEvent(created.getUserId(), EventType.REVIEW, Operation.ADD, created.getReviewId());
+        return created;
     }
 
     @Override
     public Review update(Review review) {
         getOrThrow(review.getReviewId());
-        return reviewStorage.update(review);
+        Review updated = reviewStorage.update(review);
+        eventService.addEvent(updated.getUserId(), EventType.REVIEW, Operation.UPDATE, updated.getReviewId());
+        return updated;
     }
 
     @Override
     public void delete(long id) {
-        getOrThrow(id);
+        Review review = getOrThrow(id);
         reviewStorage.delete(id);
+        eventService.addEvent(review.getUserId(), EventType.REVIEW, Operation.REMOVE, id);
     }
 
     @Override

@@ -12,14 +12,19 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.db.DirectorDbStorage;
+import ru.yandex.practicum.filmorate.storage.db.EventDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.MpaDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.ReviewDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.UserDbStorage;
 import ru.yandex.practicum.filmorate.storage.mapper.DirectorRowMapper;
+import ru.yandex.practicum.filmorate.storage.mapper.EventRowMapper;
 import ru.yandex.practicum.filmorate.storage.mapper.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.mapper.GenreRowMapper;
 import ru.yandex.practicum.filmorate.storage.mapper.MpaRowMapper;
@@ -35,9 +40,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JdbcTest
 @AutoConfigureTestDatabase
 @Import({UserDbStorage.class, FilmDbStorage.class, GenreDbStorage.class, MpaDbStorage.class,
-        DirectorDbStorage.class, ReviewDbStorage.class,
+        DirectorDbStorage.class, ReviewDbStorage.class, EventDbStorage.class,
         UserRowMapper.class, FilmRowMapper.class, GenreRowMapper.class, MpaRowMapper.class,
-        DirectorRowMapper.class, ReviewRowMapper.class})
+        DirectorRowMapper.class, ReviewRowMapper.class, EventRowMapper.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class FilmorateDbStorageTests {
 
@@ -47,6 +52,7 @@ class FilmorateDbStorageTests {
     private final MpaDbStorage mpaStorage;
     private final DirectorDbStorage directorStorage;
     private final ReviewDbStorage reviewStorage;
+    private final EventDbStorage eventStorage;
     private final JdbcTemplate jdbc;
 
     private Review newReview(long userId, long filmId, boolean positive) {
@@ -411,5 +417,35 @@ class FilmorateDbStorageTests {
         assertThat(reviewStorage.getByFilm(film.getId(), 10)).hasSize(1);
         reviewStorage.delete(created.getReviewId());
         assertThat(reviewStorage.existsById(created.getReviewId())).isFalse();
+    }
+
+    // ---------- feed ----------
+
+    @Test
+    void testEventFeedInChronologicalOrder() {
+        User user = userStorage.create(newUser("feed@mail.ru", "feeduser"));
+
+        Event first = new Event();
+        first.setUserId(user.getId());
+        first.setEventType(EventType.FRIEND);
+        first.setOperation(Operation.ADD);
+        first.setEntityId(42L);
+        first.setTimestamp(1000L);
+        eventStorage.add(first);
+
+        Event second = new Event();
+        second.setUserId(user.getId());
+        second.setEventType(EventType.LIKE);
+        second.setOperation(Operation.ADD);
+        second.setEntityId(7L);
+        second.setTimestamp(2000L);
+        eventStorage.add(second);
+
+        List<Event> feed = List.copyOf(eventStorage.getByUser(user.getId()));
+        assertThat(feed).hasSize(2);
+        assertThat(feed.get(0).getEventType()).isEqualTo(EventType.FRIEND);
+        assertThat(feed.get(0).getEntityId()).isEqualTo(42L);
+        assertThat(feed.get(1).getEventType()).isEqualTo(EventType.LIKE);
+        assertThat(feed.get(1).getEventId()).isNotNull();
     }
 }
