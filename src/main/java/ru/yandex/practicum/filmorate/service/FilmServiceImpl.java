@@ -86,6 +86,17 @@ public class FilmServiceImpl implements FilmService {
     }
 
     @Override
+    public Collection<Film> getCommon(long userId, long friendId) {
+        if (!userStorage.existById(userId)) {
+            throw new NotFoundException("Пользователь с id " + userId + " не найден");
+        }
+        if (!userStorage.existById(friendId)) {
+            throw new NotFoundException("Пользователь с id " + friendId + " не найден");
+        }
+        return filmsStorage.getCommon(userId, friendId);
+    }
+
+    @Override
     public Film findById(Long id) {
         return filmsStorage.findById(id);
     }
