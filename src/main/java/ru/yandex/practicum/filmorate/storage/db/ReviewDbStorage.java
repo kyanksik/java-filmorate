@@ -18,7 +18,8 @@ public class ReviewDbStorage implements ReviewStorage {
 
     private static final String BASE_SELECT = """
             SELECT r.review_id, r.content, r.is_positive, r.user_id, r.film_id,
-                   COALESCE(SUM(CASE WHEN rl.is_useful THEN 1 ELSE -1 END), 0) AS useful
+                   COALESCE(SUM(CASE WHEN rl.is_useful IS NULL THEN 0
+                                     WHEN rl.is_useful THEN 1 ELSE -1 END), 0) AS useful
             FROM reviews r
             LEFT JOIN review_likes rl ON r.review_id = rl.review_id
             """;

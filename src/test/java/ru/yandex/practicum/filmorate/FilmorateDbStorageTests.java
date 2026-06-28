@@ -387,6 +387,8 @@ class FilmorateDbStorageTests {
         Review created = reviewStorage.create(newReview(author.getId(), film.getId(), false));
         assertThat(created.getReviewId()).isNotNull();
         assertThat(created.getUseful()).isZero();
+        // у свежего отзыва без реакций useful должен читаться как 0
+        assertThat(reviewStorage.findById(created.getReviewId()).orElseThrow().getUseful()).isZero();
 
         // update меняет content/isPositive, useful остаётся вычисляемым
         created.setContent("updated");
