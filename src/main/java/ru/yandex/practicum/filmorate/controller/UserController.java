@@ -4,7 +4,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.EventDto;
 import ru.yandex.practicum.filmorate.dto.UserDto;
+import ru.yandex.practicum.filmorate.mapper.EventMapper;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -63,6 +65,13 @@ public class UserController {
         log.info("Запрос общих друзей пользователей id={} и id={}", id, otherId);
         return userService.getCommonFriends(id, otherId).stream()
                 .map(UserMapper::toDto)
+                .toList();
+    }
+
+    @GetMapping("/{id}/feed")
+    public Collection<EventDto> getFeed(@PathVariable Long id) {
+        return userService.getFeed(id).stream()
+                .map(EventMapper::toDto)
                 .toList();
     }
 
