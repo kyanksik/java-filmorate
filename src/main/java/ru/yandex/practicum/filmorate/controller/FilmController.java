@@ -57,6 +57,13 @@ public class FilmController {
                 .toList();
     }
 
+    @GetMapping("/search")
+    public Collection<FilmDto> search(@RequestParam String query, @RequestParam String by) {
+        return filmService.search(query, by).stream()
+                .map(FilmMapper::toDto)
+                .toList();
+    }
+
     @GetMapping("/director/{directorId}")
     public Collection<FilmDto> getByDirector(@PathVariable long directorId,
                                              @RequestParam(defaultValue = "likes") String sortBy) {

@@ -21,6 +21,8 @@ public interface FilmStorage {
 
     Collection<Film> getByDirector(long directorId, String sortBy);
 
+    Collection<Film> search(String query, String by);
+
     void addLike(Long filmId, Long userId);
 
     void deleteLike(Long filmId, Long userId);
