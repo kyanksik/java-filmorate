@@ -248,9 +248,24 @@ class FilmorateDbStorageTests {
         User liker = userStorage.create(newUser("liker@mail.ru", "liker"));
         filmStorage.addLike(popular.getId(), liker.getId());
 
-        List<Film> top = List.copyOf(filmStorage.getPopular(10));
+        List<Film> top = List.copyOf(filmStorage.getPopular(10, null, null));
 
         assertThat(top.get(0).getId()).isEqualTo(popular.getId());
+    }
+
+    @Test
+    void testGetPopularWithGenreAndYearFilters() {
+        Film film = newFilm("Filtered");
+        film.setReleaseDate(LocalDate.of(1999, 5, 5));
+        film.setGenres(new LinkedHashSet<>(List.of(new Genre(1, null))));
+        film = filmStorage.create(film);
+
+        assertThat(filmStorage.getPopular(10, 1, 1999))
+                .extracting(Film::getId).contains(film.getId());
+        assertThat(filmStorage.getPopular(10, 2, null))
+                .extracting(Film::getId).doesNotContain(film.getId());
+        assertThat(filmStorage.getPopular(10, null, 1888))
+                .extracting(Film::getId).doesNotContain(film.getId());
     }
 
     @Test
@@ -259,7 +274,7 @@ class FilmorateDbStorageTests {
         User liker = userStorage.create(newUser("liker2@mail.ru", "liker2"));
 
         filmStorage.addLike(film.getId(), liker.getId());
-        assertThat(List.copyOf(filmStorage.getPopular(1)).get(0).getId()).isEqualTo(film.getId());
+        assertThat(List.copyOf(filmStorage.getPopular(1, null, null)).get(0).getId()).isEqualTo(film.getId());
 
         filmStorage.deleteLike(film.getId(), liker.getId());
         // после удаления лайка фильм всё ещё существует

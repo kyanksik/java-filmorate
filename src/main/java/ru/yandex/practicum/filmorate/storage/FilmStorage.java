@@ -17,7 +17,7 @@ public interface FilmStorage {
 
     boolean existsById(Long id);
 
-    Collection<Film> getPopular(int count);
+    Collection<Film> getPopular(int count, Integer genreId, Integer year);
 
     Collection<Film> getByDirector(long directorId, String sortBy);
 

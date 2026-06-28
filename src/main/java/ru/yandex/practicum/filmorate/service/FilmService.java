@@ -16,7 +16,7 @@ public interface FilmService {
 
     void deleteLike(Long filmId, Long userId);
 
-    Collection<Film> getPopular(int count);
+    Collection<Film> getPopular(int count, Integer genreId, Integer year);
 
     Collection<Film> getFilmsByDirector(long directorId, String sortBy);
 
