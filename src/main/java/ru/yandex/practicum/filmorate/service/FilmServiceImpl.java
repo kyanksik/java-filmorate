@@ -114,6 +114,12 @@ public class FilmServiceImpl implements FilmService {
         return filmsStorage.findById(id);
     }
 
+    @Override
+    public void delete(long id) {
+        filmsStorage.findById(id);
+        filmsStorage.delete(id);
+    }
+
     private void validate(Film film) {
         if (film.getReleaseDate().isBefore(CINEMA_BIRTHDAY)) {
             throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");

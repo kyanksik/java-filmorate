@@ -40,6 +40,11 @@ public class FilmController {
         return FilmMapper.toDto(filmService.update(FilmMapper.toModel(newFilm)));
     }
 
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable long id) {
+        filmService.delete(id);
+    }
+
     @PutMapping("/{id}/like/{userId}")
     public void addLike(@PathVariable Long id, @PathVariable Long userId) {
         filmService.addLike(id, userId);

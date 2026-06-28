@@ -147,6 +147,11 @@ public class InMemoryFilmStorage implements FilmStorage {
         findById(filmId).getLikes().remove(userId);
     }
 
+    @Override
+    public void delete(long id) {
+        films.remove(id);
+    }
+
     public static void validate(Film film) {
         if (film.getReleaseDate().isBefore(CINEMA_BIRTHDAY)) {
             throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");

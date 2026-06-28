@@ -221,6 +221,11 @@ public class FilmDbStorage implements FilmStorage {
         jdbc.update("DELETE FROM film_likes WHERE film_id = ? AND user_id = ?", filmId, userId);
     }
 
+    @Override
+    public void delete(long id) {
+        jdbc.update("DELETE FROM films WHERE film_id = ?", id);
+    }
+
     private void saveGenres(Film film) {
         if (film.getGenres() == null || film.getGenres().isEmpty()) {
             return;

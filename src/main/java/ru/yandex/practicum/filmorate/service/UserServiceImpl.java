@@ -62,6 +62,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void delete(long id) {
+        userStorage.findById(id);
+        userStorage.delete(id);
+    }
+
+    @Override
     public Collection<Event> getFeed(long userId) {
         userStorage.findById(userId);
         return eventService.getFeed(userId);

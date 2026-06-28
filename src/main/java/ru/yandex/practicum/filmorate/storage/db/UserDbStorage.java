@@ -120,6 +120,11 @@ public class UserDbStorage implements UserStorage {
                 friendId, userId);
     }
 
+    @Override
+    public void delete(long id) {
+        jdbc.update("DELETE FROM users WHERE user_id = ?", id);
+    }
+
     private boolean friendshipExists(Long userId, Long friendId) {
         Integer count = jdbc.queryForObject(
                 "SELECT COUNT(*) FROM friendships WHERE user_id = ? AND friend_id = ?",
