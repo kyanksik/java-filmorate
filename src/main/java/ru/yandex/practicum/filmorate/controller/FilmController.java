@@ -51,8 +51,10 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public Collection<FilmDto> getPopular(@RequestParam(defaultValue = "10") int count) {
-        return filmService.getPopular(count).stream()
+    public Collection<FilmDto> getPopular(@RequestParam(defaultValue = "10") int count,
+                                          @RequestParam(required = false) Integer genreId,
+                                          @RequestParam(required = false) Integer year) {
+        return filmService.getPopular(count, genreId, year).stream()
                 .map(FilmMapper::toDto)
                 .toList();
     }
