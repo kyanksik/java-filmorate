@@ -79,6 +79,19 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
+    public Collection<Film> search(String query, String by) {
+        String needle = query.toLowerCase();
+        boolean byTitle = by.toLowerCase().contains("title");
+        boolean byDirector = by.toLowerCase().contains("director");
+        return findAll().stream()
+                .filter(f -> byTitle && f.getName() != null && f.getName().toLowerCase().contains(needle)
+                        || byDirector && f.getDirectors().stream()
+                        .anyMatch(d -> d.getName() != null && d.getName().toLowerCase().contains(needle)))
+                .sorted(Comparator.comparingInt((Film f) -> f.getLikes().size()).reversed())
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public void addLike(Long filmId, Long userId) {
         findById(filmId).getLikes().add(userId);
     }

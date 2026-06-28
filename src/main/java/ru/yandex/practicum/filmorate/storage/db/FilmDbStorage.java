@@ -13,11 +13,13 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.mapper.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.storage.mapper.GenreRowMapper;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
@@ -125,6 +127,37 @@ public class FilmDbStorage implements FilmStorage {
                         GROUP BY f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_id, m.name
                         """ + order,
                 filmRowMapper, directorId);
+        loadGenres(films);
+        loadDirectors(films);
+        return films;
+    }
+
+    @Override
+    public Collection<Film> search(String query, String by) {
+        Set<String> fields = Set.of(by.toLowerCase().split(","));
+        String pattern = "%" + query.toLowerCase() + "%";
+        List<String> conditions = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        if (fields.contains("title")) {
+            conditions.add("LOWER(f.name) LIKE ?");
+            params.add(pattern);
+        }
+        if (fields.contains("director")) {
+            conditions.add("LOWER(d.name) LIKE ?");
+            params.add(pattern);
+        }
+        if (conditions.isEmpty()) {
+            return List.of();
+        }
+        String sql = BASE_SELECT + """
+                LEFT JOIN film_likes fl ON f.film_id = fl.film_id
+                LEFT JOIN film_directors fd ON f.film_id = fd.film_id
+                LEFT JOIN directors d ON fd.director_id = d.director_id
+                WHERE %s
+                GROUP BY f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_id, m.name
+                ORDER BY COUNT(fl.user_id) DESC
+                """.formatted(String.join(" OR ", conditions));
+        List<Film> films = jdbc.query(sql, filmRowMapper, params.toArray());
         loadGenres(films);
         loadDirectors(films);
         return films;

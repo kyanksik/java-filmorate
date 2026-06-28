@@ -81,6 +81,11 @@ public class FilmServiceImpl implements FilmService {
     }
 
     @Override
+    public Collection<Film> search(String query, String by) {
+        return filmsStorage.search(query, by);
+    }
+
+    @Override
     public Film findById(Long id) {
         return filmsStorage.findById(id);
     }

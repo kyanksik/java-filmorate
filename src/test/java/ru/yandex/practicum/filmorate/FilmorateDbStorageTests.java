@@ -314,4 +314,24 @@ class FilmorateDbStorageTests {
         List<Film> byLikes = List.copyOf(filmStorage.getByDirector(director.getId(), "likes"));
         assertThat(byLikes.get(0).getId()).isEqualTo(newer.getId());
     }
+
+    @Test
+    void testSearchByTitleAndDirector() {
+        Director director = directorStorage.create(new Director(null, "xyzdir"));
+
+        Film byTitle = newFilm("xyzfilm");
+        byTitle = filmStorage.create(byTitle);
+
+        Film byDir = newFilm("Other");
+        byDir.setDirectors(new LinkedHashSet<>(List.of(new Director(director.getId(), null))));
+        byDir = filmStorage.create(byDir);
+
+        assertThat(filmStorage.search("xyz", "title"))
+                .extracting(Film::getId).containsExactly(byTitle.getId());
+        assertThat(filmStorage.search("xyz", "director"))
+                .extracting(Film::getId).containsExactly(byDir.getId());
+        assertThat(filmStorage.search("xyz", "title,director"))
+                .extracting(Film::getId).containsExactlyInAnyOrder(byTitle.getId(), byDir.getId());
+        assertThat(filmStorage.search("notfoundzzz", "title,director")).isEmpty();
+    }
 }

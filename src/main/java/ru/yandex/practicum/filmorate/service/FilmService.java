@@ -20,5 +20,7 @@ public interface FilmService {
 
     Collection<Film> getFilmsByDirector(long directorId, String sortBy);
 
+    Collection<Film> search(String query, String by);
+
     Film findById(Long id);
 }
