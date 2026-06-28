@@ -102,6 +102,14 @@ public class FilmServiceImpl implements FilmService {
     }
 
     @Override
+    public Collection<Film> getRecommendations(long userId) {
+        if (!userStorage.existById(userId)) {
+            throw new NotFoundException("Пользователь с id " + userId + " не найден");
+        }
+        return filmsStorage.getRecommendations(userId);
+    }
+
+    @Override
     public Film findById(Long id) {
         return filmsStorage.findById(id);
     }

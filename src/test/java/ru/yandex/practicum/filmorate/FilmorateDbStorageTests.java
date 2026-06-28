@@ -448,4 +448,27 @@ class FilmorateDbStorageTests {
         assertThat(feed.get(1).getEventType()).isEqualTo(EventType.LIKE);
         assertThat(feed.get(1).getEventId()).isNotNull();
     }
+
+    // ---------- recommendations ----------
+
+    @Test
+    void testRecommendations() {
+        User target = userStorage.create(newUser("rt@mail.ru", "rt"));
+        User similar = userStorage.create(newUser("rs@mail.ru", "rs"));
+        Film shared = filmStorage.create(newFilm("Shared"));
+        Film extra = filmStorage.create(newFilm("Extra"));
+
+        filmStorage.addLike(shared.getId(), target.getId());
+        filmStorage.addLike(shared.getId(), similar.getId());
+        filmStorage.addLike(extra.getId(), similar.getId());
+
+        // target получает фильм, который лайкнул похожий пользователь
+        assertThat(filmStorage.getRecommendations(target.getId()))
+                .extracting(Film::getId).containsExactly(extra.getId());
+        // у similar нечего рекомендовать (лайки target — подмножество)
+        assertThat(filmStorage.getRecommendations(similar.getId())).isEmpty();
+        // пользователь без лайков — пустой список
+        User noLikes = userStorage.create(newUser("nl@mail.ru", "nl"));
+        assertThat(filmStorage.getRecommendations(noLikes.getId())).isEmpty();
+    }
 }
