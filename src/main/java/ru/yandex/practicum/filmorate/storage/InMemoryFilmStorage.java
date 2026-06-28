@@ -8,7 +8,10 @@ import ru.yandex.practicum.filmorate.model.Film;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -100,6 +103,37 @@ public class InMemoryFilmStorage implements FilmStorage {
         return findAll().stream()
                 .filter(f -> f.getLikes().contains(userId) && f.getLikes().contains(friendId))
                 .sorted(Comparator.comparingInt((Film f) -> f.getLikes().size()).reversed())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Collection<Film> getRecommendations(long userId) {
+        Set<Long> userLikes = findAll().stream()
+                .filter(f -> f.getLikes().contains(userId))
+                .map(Film::getId)
+                .collect(Collectors.toSet());
+        if (userLikes.isEmpty()) {
+            return java.util.List.of();
+        }
+        Map<Long, Long> overlap = new HashMap<>();
+        for (Film f : findAll()) {
+            if (userLikes.contains(f.getId())) {
+                for (Long other : f.getLikes()) {
+                    if (other != userId) {
+                        overlap.merge(other, 1L, Long::sum);
+                    }
+                }
+            }
+        }
+        Optional<Long> bestUser = overlap.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey);
+        if (bestUser.isEmpty()) {
+            return java.util.List.of();
+        }
+        long best = bestUser.get();
+        return findAll().stream()
+                .filter(f -> f.getLikes().contains(best) && !f.getLikes().contains(userId))
                 .collect(Collectors.toList());
     }
 

@@ -24,5 +24,7 @@ public interface FilmService {
 
     Collection<Film> getCommon(long userId, long friendId);
 
+    Collection<Film> getRecommendations(long userId);
+
     Film findById(Long id);
 }

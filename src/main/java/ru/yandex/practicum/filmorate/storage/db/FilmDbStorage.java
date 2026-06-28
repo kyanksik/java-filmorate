@@ -190,6 +190,27 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
+    public Collection<Film> getRecommendations(long userId) {
+        List<Film> films = jdbc.query(BASE_SELECT + """
+                        JOIN film_likes fl ON f.film_id = fl.film_id
+                        WHERE fl.user_id = (
+                            SELECT fl2.user_id
+                            FROM film_likes fl1
+                            JOIN film_likes fl2 ON fl1.film_id = fl2.film_id AND fl2.user_id <> ?
+                            WHERE fl1.user_id = ?
+                            GROUP BY fl2.user_id
+                            ORDER BY COUNT(*) DESC
+                            LIMIT 1
+                        )
+                        AND f.film_id NOT IN (SELECT film_id FROM film_likes WHERE user_id = ?)
+                        GROUP BY f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_id, m.name
+                        """, filmRowMapper, userId, userId, userId);
+        loadGenres(films);
+        loadDirectors(films);
+        return films;
+    }
+
+    @Override
     public void addLike(Long filmId, Long userId) {
         jdbc.update("MERGE INTO film_likes (film_id, user_id) KEY (film_id, user_id) VALUES (?, ?)",
                 filmId, userId);
