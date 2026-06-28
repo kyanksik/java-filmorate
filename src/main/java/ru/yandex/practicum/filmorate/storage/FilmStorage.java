@@ -23,6 +23,8 @@ public interface FilmStorage {
 
     Collection<Film> search(String query, String by);
 
+    Collection<Film> getCommon(long userId, long friendId);
+
     void addLike(Long filmId, Long userId);
 
     void deleteLike(Long filmId, Long userId);

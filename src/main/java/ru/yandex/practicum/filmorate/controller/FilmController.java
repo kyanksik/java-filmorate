@@ -57,6 +57,13 @@ public class FilmController {
                 .toList();
     }
 
+    @GetMapping("/common")
+    public Collection<FilmDto> getCommon(@RequestParam long userId, @RequestParam long friendId) {
+        return filmService.getCommon(userId, friendId).stream()
+                .map(FilmMapper::toDto)
+                .toList();
+    }
+
     @GetMapping("/search")
     public Collection<FilmDto> search(@RequestParam String query, @RequestParam String by) {
         return filmService.search(query, by).stream()

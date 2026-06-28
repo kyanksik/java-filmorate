@@ -22,5 +22,7 @@ public interface FilmService {
 
     Collection<Film> search(String query, String by);
 
+    Collection<Film> getCommon(long userId, long friendId);
+
     Film findById(Long id);
 }

@@ -164,6 +164,20 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
+    public Collection<Film> getCommon(long userId, long friendId) {
+        List<Film> films = jdbc.query(BASE_SELECT + """
+                        JOIN film_likes ufl ON f.film_id = ufl.film_id AND ufl.user_id = ?
+                        JOIN film_likes ffl ON f.film_id = ffl.film_id AND ffl.user_id = ?
+                        LEFT JOIN film_likes fl ON f.film_id = fl.film_id
+                        GROUP BY f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_id, m.name
+                        ORDER BY COUNT(fl.user_id) DESC
+                        """, filmRowMapper, userId, friendId);
+        loadGenres(films);
+        loadDirectors(films);
+        return films;
+    }
+
+    @Override
     public void addLike(Long filmId, Long userId) {
         jdbc.update("MERGE INTO film_likes (film_id, user_id) KEY (film_id, user_id) VALUES (?, ?)",
                 filmId, userId);

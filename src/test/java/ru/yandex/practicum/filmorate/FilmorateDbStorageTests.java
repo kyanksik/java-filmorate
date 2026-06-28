@@ -334,4 +334,18 @@ class FilmorateDbStorageTests {
                 .extracting(Film::getId).containsExactlyInAnyOrder(byTitle.getId(), byDir.getId());
         assertThat(filmStorage.search("notfoundzzz", "title,director")).isEmpty();
     }
+
+    @Test
+    void testGetCommonFilms() {
+        User u1 = userStorage.create(newUser("cu1@mail.ru", "cu1"));
+        User u2 = userStorage.create(newUser("cu2@mail.ru", "cu2"));
+        Film common = filmStorage.create(newFilm("Common"));
+        Film onlyOne = filmStorage.create(newFilm("OnlyOne"));
+        filmStorage.addLike(common.getId(), u1.getId());
+        filmStorage.addLike(common.getId(), u2.getId());
+        filmStorage.addLike(onlyOne.getId(), u1.getId());
+
+        assertThat(filmStorage.getCommon(u1.getId(), u2.getId()))
+                .extracting(Film::getId).containsExactly(common.getId());
+    }
 }
