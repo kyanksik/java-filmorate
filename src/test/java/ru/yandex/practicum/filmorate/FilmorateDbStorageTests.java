@@ -12,15 +12,18 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.db.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.MpaDbStorage;
+import ru.yandex.practicum.filmorate.storage.db.ReviewDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.UserDbStorage;
 import ru.yandex.practicum.filmorate.storage.mapper.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.storage.mapper.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.mapper.GenreRowMapper;
 import ru.yandex.practicum.filmorate.storage.mapper.MpaRowMapper;
+import ru.yandex.practicum.filmorate.storage.mapper.ReviewRowMapper;
 import ru.yandex.practicum.filmorate.storage.mapper.UserRowMapper;
 
 import java.time.LocalDate;
@@ -32,9 +35,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JdbcTest
 @AutoConfigureTestDatabase
 @Import({UserDbStorage.class, FilmDbStorage.class, GenreDbStorage.class, MpaDbStorage.class,
-        DirectorDbStorage.class,
+        DirectorDbStorage.class, ReviewDbStorage.class,
         UserRowMapper.class, FilmRowMapper.class, GenreRowMapper.class, MpaRowMapper.class,
-        DirectorRowMapper.class})
+        DirectorRowMapper.class, ReviewRowMapper.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class FilmorateDbStorageTests {
 
@@ -43,7 +46,17 @@ class FilmorateDbStorageTests {
     private final GenreDbStorage genreStorage;
     private final MpaDbStorage mpaStorage;
     private final DirectorDbStorage directorStorage;
+    private final ReviewDbStorage reviewStorage;
     private final JdbcTemplate jdbc;
+
+    private Review newReview(long userId, long filmId, boolean positive) {
+        Review review = new Review();
+        review.setContent("review content");
+        review.setIsPositive(positive);
+        review.setUserId(userId);
+        review.setFilmId(filmId);
+        return review;
+    }
 
     private Boolean confirmed(long userId, long friendId) {
         return jdbc.queryForObject(
@@ -362,5 +375,39 @@ class FilmorateDbStorageTests {
 
         assertThat(filmStorage.getCommon(u1.getId(), u2.getId()))
                 .extracting(Film::getId).containsExactly(common.getId());
+    }
+
+    // ---------- reviews ----------
+
+    @Test
+    void testReviewCrudAndUseful() {
+        User author = userStorage.create(newUser("ra@mail.ru", "ra"));
+        Film film = filmStorage.create(newFilm("Reviewed"));
+
+        Review created = reviewStorage.create(newReview(author.getId(), film.getId(), false));
+        assertThat(created.getReviewId()).isNotNull();
+        assertThat(created.getUseful()).isZero();
+
+        // update меняет content/isPositive, useful остаётся вычисляемым
+        created.setContent("updated");
+        created.setIsPositive(true);
+        Review updated = reviewStorage.update(created);
+        assertThat(updated.getContent()).isEqualTo("updated");
+        assertThat(updated.getIsPositive()).isTrue();
+
+        // лайк/дизлайк меняют useful
+        User u1 = userStorage.create(newUser("ru1@mail.ru", "ru1"));
+        User u2 = userStorage.create(newUser("ru2@mail.ru", "ru2"));
+        reviewStorage.addReaction(created.getReviewId(), u1.getId(), true);
+        assertThat(reviewStorage.findById(created.getReviewId()).orElseThrow().getUseful()).isEqualTo(1);
+        reviewStorage.addReaction(created.getReviewId(), u2.getId(), false);
+        assertThat(reviewStorage.findById(created.getReviewId()).orElseThrow().getUseful()).isZero();
+        reviewStorage.removeReaction(created.getReviewId(), u1.getId());
+        assertThat(reviewStorage.findById(created.getReviewId()).orElseThrow().getUseful()).isEqualTo(-1);
+
+        // выборка по фильму и удаление
+        assertThat(reviewStorage.getByFilm(film.getId(), 10)).hasSize(1);
+        reviewStorage.delete(created.getReviewId());
+        assertThat(reviewStorage.existsById(created.getReviewId())).isFalse();
     }
 }
