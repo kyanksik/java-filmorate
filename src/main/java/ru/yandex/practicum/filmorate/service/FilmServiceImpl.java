@@ -3,8 +3,10 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -36,20 +38,22 @@ public class FilmServiceImpl implements FilmService {
     private final EventService eventService;
 
     @Override
-    public Collection<Film> findAll() {
-        return filmsStorage.findAll();
+    public Collection<FilmDto> findAll() {
+        return toDtoList(filmsStorage.findAll());
     }
 
     @Override
-    public Film create(Film film) {
+    public FilmDto create(FilmDto dto) {
+        Film film = FilmMapper.toModel(dto);
         validate(film);
-        return filmsStorage.create(film);
+        return FilmMapper.toDto(filmsStorage.create(film));
     }
 
     @Override
-    public Film update(Film newFilm) {
-        validate(newFilm);
-        return filmsStorage.update(newFilm);
+    public FilmDto update(FilmDto dto) {
+        Film film = FilmMapper.toModel(dto);
+        validate(film);
+        return FilmMapper.toDto(filmsStorage.update(film));
     }
 
     @Override
@@ -73,51 +77,55 @@ public class FilmServiceImpl implements FilmService {
     }
 
     @Override
-    public Collection<Film> getPopular(int count, Integer genreId, Integer year) {
-        return filmsStorage.getPopular(count, genreId, year);
+    public Collection<FilmDto> getPopular(int count, Integer genreId, Integer year) {
+        return toDtoList(filmsStorage.getPopular(count, genreId, year));
     }
 
     @Override
-    public Collection<Film> getFilmsByDirector(long directorId, String sortBy) {
+    public Collection<FilmDto> getFilmsByDirector(long directorId, String sortBy) {
         if (!directorStorage.existsById(directorId)) {
             throw new NotFoundException("Режиссёр с id " + directorId + " не найден");
         }
-        return filmsStorage.getByDirector(directorId, sortBy);
+        return toDtoList(filmsStorage.getByDirector(directorId, sortBy));
     }
 
     @Override
-    public Collection<Film> search(String query, String by) {
-        return filmsStorage.search(query, by);
+    public Collection<FilmDto> search(String query, String by) {
+        return toDtoList(filmsStorage.search(query, by));
     }
 
     @Override
-    public Collection<Film> getCommon(long userId, long friendId) {
+    public Collection<FilmDto> getCommon(long userId, long friendId) {
         if (!userStorage.existById(userId)) {
             throw new NotFoundException("Пользователь с id " + userId + " не найден");
         }
         if (!userStorage.existById(friendId)) {
             throw new NotFoundException("Пользователь с id " + friendId + " не найден");
         }
-        return filmsStorage.getCommon(userId, friendId);
+        return toDtoList(filmsStorage.getCommon(userId, friendId));
     }
 
     @Override
-    public Collection<Film> getRecommendations(long userId) {
+    public Collection<FilmDto> getRecommendations(long userId) {
         if (!userStorage.existById(userId)) {
             throw new NotFoundException("Пользователь с id " + userId + " не найден");
         }
-        return filmsStorage.getRecommendations(userId);
+        return toDtoList(filmsStorage.getRecommendations(userId));
     }
 
     @Override
-    public Film findById(Long id) {
-        return filmsStorage.findById(id);
+    public FilmDto findById(Long id) {
+        return FilmMapper.toDto(filmsStorage.findById(id));
     }
 
     @Override
     public void delete(long id) {
         filmsStorage.findById(id);
         filmsStorage.delete(id);
+    }
+
+    private Collection<FilmDto> toDtoList(Collection<Film> films) {
+        return films.stream().map(FilmMapper::toDto).toList();
     }
 
     private void validate(Film film) {

@@ -3,7 +3,9 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dto.ReviewDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.mapper.ReviewMapper;
 import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.Review;
@@ -25,20 +27,20 @@ public class ReviewServiceImpl implements ReviewService {
     private final EventService eventService;
 
     @Override
-    public Review create(Review review) {
+    public ReviewDto create(ReviewDto review) {
         checkUser(review.getUserId());
         checkFilm(review.getFilmId());
-        Review created = reviewStorage.create(review);
+        Review created = reviewStorage.create(ReviewMapper.toModel(review));
         eventService.addEvent(created.getUserId(), EventType.REVIEW, Operation.ADD, created.getReviewId());
-        return created;
+        return ReviewMapper.toDto(created);
     }
 
     @Override
-    public Review update(Review review) {
+    public ReviewDto update(ReviewDto review) {
         getOrThrow(review.getReviewId());
-        Review updated = reviewStorage.update(review);
+        Review updated = reviewStorage.update(ReviewMapper.toModel(review));
         eventService.addEvent(updated.getUserId(), EventType.REVIEW, Operation.UPDATE, updated.getReviewId());
-        return updated;
+        return ReviewMapper.toDto(updated);
     }
 
     @Override
@@ -49,16 +51,18 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public Review findById(long id) {
-        return getOrThrow(id);
+    public ReviewDto findById(long id) {
+        return ReviewMapper.toDto(getOrThrow(id));
     }
 
     @Override
-    public Collection<Review> getByFilm(Long filmId, int count) {
+    public Collection<ReviewDto> getByFilm(Long filmId, int count) {
         if (filmId != null) {
             checkFilm(filmId);
         }
-        return reviewStorage.getByFilm(filmId, count);
+        return reviewStorage.getByFilm(filmId, count).stream()
+                .map(ReviewMapper::toDto)
+                .toList();
     }
 
     @Override

@@ -2,7 +2,9 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dto.DirectorDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.mapper.DirectorMapper;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 
@@ -15,32 +17,40 @@ public class DirectorServiceImpl implements DirectorService {
     private final DirectorStorage directorStorage;
 
     @Override
-    public Collection<Director> findAll() {
-        return directorStorage.findAll();
+    public Collection<DirectorDto> findAll() {
+        return directorStorage.findAll().stream()
+                .map(DirectorMapper::toDto)
+                .toList();
     }
 
     @Override
-    public Director findById(long id) {
-        return directorStorage.findById(id)
-                .orElseThrow(() -> new NotFoundException("Режиссёр с id " + id + " не найден"));
+    public DirectorDto findById(long id) {
+        return DirectorMapper.toDto(getOrThrow(id));
     }
 
     @Override
-    public Director create(Director director) {
-        return directorStorage.create(director);
+    public DirectorDto create(DirectorDto director) {
+        Director created = directorStorage.create(DirectorMapper.toModel(director));
+        return DirectorMapper.toDto(created);
     }
 
     @Override
-    public Director update(Director director) {
+    public DirectorDto update(DirectorDto director) {
         if (director.getId() == null || !directorStorage.existsById(director.getId())) {
-            throw new NotFoundException("Режиссёр с id " + director.getId() + " не найден");
+            throw new NotFoundException("Режиссёр с id " + (director.getId()) + " не найден");
         }
-        return directorStorage.update(director);
+        Director updated = directorStorage.update(DirectorMapper.toModel(director));
+        return DirectorMapper.toDto(updated);
     }
 
     @Override
     public void delete(long id) {
-        findById(id);
+        getOrThrow(id);
         directorStorage.delete(id);
+    }
+
+    private Director getOrThrow(long id) {
+        return directorStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("Режиссёр с id " + id + " не найден"));
     }
 }

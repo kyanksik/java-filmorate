@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.ReviewDto;
-import ru.yandex.practicum.filmorate.mapper.ReviewMapper;
 import ru.yandex.practicum.filmorate.service.ReviewService;
 
 import java.util.Collection;
@@ -19,12 +18,12 @@ public class ReviewController {
 
     @PostMapping
     public ReviewDto create(@Valid @RequestBody ReviewDto review) {
-        return ReviewMapper.toDto(reviewService.create(ReviewMapper.toModel(review)));
+        return reviewService.create(review);
     }
 
     @PutMapping
     public ReviewDto update(@Valid @RequestBody ReviewDto review) {
-        return ReviewMapper.toDto(reviewService.update(ReviewMapper.toModel(review)));
+        return reviewService.update(review);
     }
 
     @DeleteMapping("/{id}")
@@ -34,15 +33,13 @@ public class ReviewController {
 
     @GetMapping("/{id}")
     public ReviewDto findById(@PathVariable long id) {
-        return ReviewMapper.toDto(reviewService.findById(id));
+        return reviewService.findById(id);
     }
 
     @GetMapping
     public Collection<ReviewDto> getByFilm(@RequestParam(required = false) Long filmId,
                                            @RequestParam(defaultValue = "10") int count) {
-        return reviewService.getByFilm(filmId, count).stream()
-                .map(ReviewMapper::toDto)
-                .toList();
+        return reviewService.getByFilm(filmId, count);
     }
 
     @PutMapping("/{id}/like/{userId}")
