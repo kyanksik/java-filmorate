@@ -1,7 +1,9 @@
 package ru.yandex.practicum.filmorate.mapper;
 
+import ru.yandex.practicum.filmorate.dto.DirectorDto;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.GenreDto;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
@@ -27,6 +29,11 @@ public final class FilmMapper {
                 .map(GenreMapper::toDto)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         dto.setGenres(genres);
+        Set<DirectorDto> directors = film.getDirectors() == null ? new LinkedHashSet<>()
+                : film.getDirectors().stream()
+                .map(DirectorMapper::toDto)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        dto.setDirectors(directors);
         return dto;
     }
 
@@ -43,6 +50,11 @@ public final class FilmMapper {
                 .map(GenreMapper::toModel)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         film.setGenres(genres);
+        Set<Director> directors = dto.getDirectors() == null ? new LinkedHashSet<>()
+                : dto.getDirectors().stream()
+                .map(DirectorMapper::toModel)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        film.setDirectors(directors);
         return film;
     }
 }

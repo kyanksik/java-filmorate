@@ -7,7 +7,11 @@ import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -54,8 +58,12 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getPopular(int count) {
+    public Collection<Film> getPopular(int count, Integer genreId, Integer year) {
         return findAll().stream()
+                .filter(f -> genreId == null
+                        || f.getGenres().stream().anyMatch(g -> g.getId().equals(genreId)))
+                .filter(f -> year == null
+                        || f.getReleaseDate() != null && f.getReleaseDate().getYear() == year)
                 .sorted((f1, f2) -> f2.getLikes().size() - f1.getLikes().size())
                 .limit(count)
                 .collect(Collectors.toList());
@@ -67,6 +75,69 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
+    public Collection<Film> getByDirector(long directorId, String sortBy) {
+        Comparator<Film> comparator = "likes".equalsIgnoreCase(sortBy)
+                ? Comparator.comparingInt((Film f) -> f.getLikes().size()).reversed()
+                : Comparator.comparing(Film::getReleaseDate);
+        return findAll().stream()
+                .filter(f -> f.getDirectors().stream().anyMatch(d -> d.getId() == directorId))
+                .sorted(comparator)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Collection<Film> search(String query, String by) {
+        String needle = query.toLowerCase();
+        boolean byTitle = by.toLowerCase().contains("title");
+        boolean byDirector = by.toLowerCase().contains("director");
+        return findAll().stream()
+                .filter(f -> byTitle && f.getName() != null && f.getName().toLowerCase().contains(needle)
+                        || byDirector && f.getDirectors().stream()
+                        .anyMatch(d -> d.getName() != null && d.getName().toLowerCase().contains(needle)))
+                .sorted(Comparator.comparingInt((Film f) -> f.getLikes().size()).reversed())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Collection<Film> getCommon(long userId, long friendId) {
+        return findAll().stream()
+                .filter(f -> f.getLikes().contains(userId) && f.getLikes().contains(friendId))
+                .sorted(Comparator.comparingInt((Film f) -> f.getLikes().size()).reversed())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Collection<Film> getRecommendations(long userId) {
+        Set<Long> userLikes = findAll().stream()
+                .filter(f -> f.getLikes().contains(userId))
+                .map(Film::getId)
+                .collect(Collectors.toSet());
+        if (userLikes.isEmpty()) {
+            return java.util.List.of();
+        }
+        Map<Long, Long> overlap = new HashMap<>();
+        for (Film f : findAll()) {
+            if (userLikes.contains(f.getId())) {
+                for (Long other : f.getLikes()) {
+                    if (other != userId) {
+                        overlap.merge(other, 1L, Long::sum);
+                    }
+                }
+            }
+        }
+        Optional<Long> bestUser = overlap.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey);
+        if (bestUser.isEmpty()) {
+            return java.util.List.of();
+        }
+        long best = bestUser.get();
+        return findAll().stream()
+                .filter(f -> f.getLikes().contains(best) && !f.getLikes().contains(userId))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public void addLike(Long filmId, Long userId) {
         findById(filmId).getLikes().add(userId);
     }
@@ -74,6 +145,11 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public void deleteLike(Long filmId, Long userId) {
         findById(filmId).getLikes().remove(userId);
+    }
+
+    @Override
+    public void delete(long id) {
+        films.remove(id);
     }
 
     public static void validate(Film film) {

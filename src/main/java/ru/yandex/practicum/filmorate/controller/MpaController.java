@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.MpaDto;
-import ru.yandex.practicum.filmorate.mapper.MpaMapper;
 import ru.yandex.practicum.filmorate.service.MpaService;
 
 import java.util.Collection;
@@ -18,13 +17,11 @@ public class MpaController {
 
     @GetMapping
     public Collection<MpaDto> findAll() {
-        return mpaService.findAll().stream()
-                .map(MpaMapper::toDto)
-                .toList();
+        return mpaService.findAll();
     }
 
     @GetMapping("/{id}")
     public MpaDto findById(@PathVariable int id) {
-        return MpaMapper.toDto(mpaService.findById(id));
+        return mpaService.findById(id);
     }
 }

@@ -17,10 +17,20 @@ public interface FilmStorage {
 
     boolean existsById(Long id);
 
-    Collection<Film> getPopular(int count);
+    Collection<Film> getPopular(int count, Integer genreId, Integer year);
+
+    Collection<Film> getByDirector(long directorId, String sortBy);
+
+    Collection<Film> search(String query, String by);
+
+    Collection<Film> getCommon(long userId, long friendId);
+
+    Collection<Film> getRecommendations(long userId);
 
     void addLike(Long filmId, Long userId);
 
     void deleteLike(Long filmId, Long userId);
+
+    void delete(long id);
 
 }
